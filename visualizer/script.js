@@ -104,7 +104,7 @@ brainChannel.onmessage = (event) => {
     }
 
 
-    if (data.type === "stats_update") {
+if (data.type === "stats_update") {
 
         currentStats = {
             generation: data.generation,

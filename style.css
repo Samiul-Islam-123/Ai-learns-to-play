@@ -5,3 +5,38 @@ html, body {
 canvas {
   display: block;
 }
+
+#sim-controls {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  gap: 8px;
+  z-index: 10;
+}
+
+#sim-controls button {
+  background: rgba(20, 20, 20, 0.85);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 8px;
+  padding: 8px 14px;
+  font: 13px monospace;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  transition: background 0.15s;
+}
+
+#sim-controls button:hover {
+  background: rgba(60, 60, 60, 0.95);
+}
+
+#btn-download {
+  border-color: rgba(99, 179, 237, 0.5) !important;
+  color: rgba(99, 179, 237, 1) !important;
+}
+
+#btn-import {
+  border-color: rgba(104, 211, 145, 0.5) !important;
+  color: rgba(104, 211, 145, 1) !important;
+}

@@ -171,3 +171,57 @@ function keyPressed() {
     }
   }
 }
+
+
+let _simRunning = true;
+
+function stopSimulation() {
+
+    if (_simRunning) {
+        noLoop();
+        _simRunning = false;
+        document.getElementById("btn-stop").textContent = "▶ Resume";
+    } else {
+        loop();
+        _simRunning = true;
+        document.getElementById("btn-stop").textContent = "⏸ Stop";
+    }
+}
+
+function resetSimulation() {
+
+    pretrained = false;
+    best_bird = null;
+    generation = 0;
+    birds = [];
+    pipes = [];
+
+    _simRunning = true;
+    document.getElementById("btn-stop").textContent = "⏸ Stop";
+
+    loop();
+    initGeneticEvolution();
+}
+
+
+function handleBrainImport(event) {
+
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+        try {
+            const data = JSON.parse(e.target.result);
+            loadBrainFromJSON(data);
+        } catch (err) {
+            console.error("Failed to parse brain JSON:", err);
+        }
+    };
+
+    reader.readAsText(file);
+
+    // Reset input so the same file can be re-imported
+    event.target.value = "";
+}

@@ -17,6 +17,14 @@
   <body>
     <main>
     </main>
+
+    <div id="sim-controls">
+      <button id="btn-stop" onclick="stopSimulation()">⏸ Stop</button>
+      <button id="btn-reset" onclick="resetSimulation()">↺ Reset</button>
+      <button id="btn-download" onclick="downloadBestBrain()">⬇ Download Best Brain</button>
+      <button id="btn-import" onclick="document.getElementById('brain-file-input').click()">⬆ Import Brain</button>
+      <input type="file" id="brain-file-input" accept=".json" style="display:none" onchange="handleBrainImport(event)">
+    </div>
     <script src="GlobalConfigs.js"></script>
     <script src="sketch.js"></script>
 

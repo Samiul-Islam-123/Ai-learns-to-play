@@ -20,42 +20,24 @@ class Network {
     }
 
     init() {
-        console.log("initializing network...");
+
         for (let i = 0; i < this.layers.length - 1; i++) {
-            const currentLayer = this.layers[i];
-            const nextLayer = this.layers[i + 1];
-
             const matrix = [];
-
-            for (let j = 0; j < currentLayer; j++) {
+            for (let j = 0; j < this.layers[i]; j++) {
                 const row = [];
-
-                for (let k = 0; k < nextLayer; k++) {
-                    row.push(random(-1, 1));
-                }
-
+                for (let k = 0; k < this.layers[i + 1]; k++) row.push(random(-1, 1));
                 matrix.push(row);
             }
-
             this.weights.push(matrix);
         }
 
-        //intialize the neurons
         for (let i = 0; i < this.layers.length; i++) {
             const layer = [];
-
             for (let j = 0; j < this.layers[i]; j++) {
-                const numInputs = i === 0 ? 0 : this.layers[i - 1];
-
-                layer.push(
-                    new Neuron(numInputs, "sigmoid")
-                );
+                layer.push(new Neuron(i === 0 ? 0 : this.layers[i - 1], "sigmoid"));
             }
-
             this.neurons.push(layer);
         }
-
-        console.log("Network initialized with weights:");
     }
 
     sigmoid(x) {
@@ -64,10 +46,7 @@ class Network {
 
     predict(inputs) {
 
-
-        // INPUT LAYER
-
-
+        // Input layer
         for (let i = 0; i < this.input_layer; i++) {
             this.neurons[0][i].value = inputs[i];
         }
@@ -78,75 +57,24 @@ class Network {
             weights: this.weights
         });
 
+        // Hidden + output layers
+        for (let layer = 1; layer < this.layers.length; layer++) {
 
+            const prevLayer    = this.neurons[layer - 1];
+            const currLayer    = this.neurons[layer];
+            const weightMatrix = this.weights[layer - 1];
 
-        // PROCESS LAYERS
+            for (let j = 0; j < currLayer.length; j++) {
 
+                let sum = currLayer[j].bias;
 
-        for (
-            let layer = 1;
-            layer < this.layers.length;
-            layer++
-        ) {
-
-            const previousLayer =
-                this.neurons[layer - 1];
-
-            const currentLayer =
-                this.neurons[layer];
-
-            const weightMatrix =
-                this.weights[layer - 1];
-
-
-
-            // Calculate every neuron in this layer
-
-
-            for (
-                let neuronIndex = 0;
-                neuronIndex < currentLayer.length;
-                neuronIndex++
-            ) {
-
-                let sum = 0;
-
-
-                // Weighted sum
-
-                for (
-                    let previousIndex = 0;
-                    previousIndex < previousLayer.length;
-                    previousIndex++
-                ) {
-
-                    sum +=
-                        previousLayer[previousIndex].value *
-                        weightMatrix[previousIndex][neuronIndex];
+                for (let k = 0; k < prevLayer.length; k++) {
+                    sum += prevLayer[k].value * weightMatrix[k][j];
                 }
 
-
-                // Bias
-
-                sum +=
-                    currentLayer[neuronIndex].bias;
-
-
-                // Store weighted sum
-
-                currentLayer[neuronIndex].input = sum;
-
-
-                // Activation
-
-                currentLayer[neuronIndex].value =
-                    this.sigmoid(sum);
+                currLayer[j].input = sum;
+                currLayer[j].value = this.sigmoid(sum);
             }
-
-
-
-            // Layer finished
-
 
             if (this.visualize) brainChannel.postMessage({
                 type: "layer_complete",
@@ -155,15 +83,7 @@ class Network {
             });
         }
 
-
-
-        // OUTPUT
-
-
-        const output =
-            this.neurons[this.neurons.length - 1]
-                .map(neuron => neuron.value);
-
+        const output = this.neurons[this.layers.length - 1].map(n => n.value);
 
         if (this.visualize) brainChannel.postMessage({
             type: "prediction_complete",
@@ -171,64 +91,55 @@ class Network {
             neurons: this.getSerializableNeurons()
         });
 
-
         return output;
     }
 
     mutate(strength = 0.1) {
 
-        // Mutate weights
-        for (let layer = 0; layer < this.weights.length; layer++) {
+        for (let layer = 0; layer < this.weights.length; layer++)
+            for (let i = 0; i < this.weights[layer].length; i++)
+                for (let j = 0; j < this.weights[layer][i].length; j++)
+                    this.weights[layer][i][j] += random(-strength, strength);
 
-            for (let i = 0; i < this.weights[layer].length; i++) {
-
-                for (let j = 0; j < this.weights[layer][i].length; j++) {
-
-                    const change = random(
-                        -strength,
-                        strength
-                    );
-
-                    this.weights[layer][i][j] += change;
-                }
-            }
-        }
-
-
-
-
-        // Mutate biases
-        for (let layer = 0; layer < this.neurons.length; layer++) {
-
-            for (let neuron of this.neurons[layer]) {
-
-                const change = random(
-                    -strength,
-                    strength
-                );
-
-                neuron.bias += change;
-            }
-        }
+        for (let layer = 0; layer < this.neurons.length; layer++)
+            for (let neuron of this.neurons[layer])
+                neuron.bias += random(-strength, strength);
     }
 
-    display() {
-        console.log("Network Structure:");
-        console.log(`Total Layers: ${this.layers.length}`);
-        console.log(`Input Neurons: ${this.input_layer}`);
-        console.log(`Hidden Layers: ${this.hidden_layer.length}`);
-        console.log(`Output Neurons: ${this.output_layer}`);
+    clone() {
 
-        console.log("Neurons in each layer:");
-        console.log(this.neurons)
-        console.log("weights");
-        console.log(this.weights)
+        const copy = new Network(this.input_layer, this.hidden_layer, this.output_layer);
 
+        for (let i = 0; i < this.weights.length; i++)
+            for (let j = 0; j < this.weights[i].length; j++)
+                for (let k = 0; k < this.weights[i][j].length; k++)
+                    copy.weights[i][j][k] = this.weights[i][j][k];
 
+        for (let i = 0; i < this.neurons.length; i++)
+            for (let j = 0; j < this.neurons[i].length; j++)
+                copy.neurons[i][j].bias = this.neurons[i][j].bias;
+
+        return copy;
+    }
+
+    static fromJSON(data) {
+
+        const hidden = data.layers.slice(1, -1);
+        const net = new Network(data.layers[0], hidden, data.layers[data.layers.length - 1]);
+
+        for (let i = 0; i < data.weights.length; i++)
+            for (let j = 0; j < data.weights[i].length; j++)
+                for (let k = 0; k < data.weights[i][j].length; k++)
+                    net.weights[i][j][k] = data.weights[i][j][k];
+
+        for (let i = 0; i < data.biases.length; i++)
+            for (let j = 0; j < data.biases[i].length; j++)
+                net.neurons[i][j].bias = data.biases[i][j];
+
+        return net;
     }
 
     getSerializableNeurons() {
-
         return this.neurons.map(layer =>
             layer.map(neuron => ({
                 bias: neuron.bias,
@@ -240,37 +151,9 @@ class Network {
         );
     }
 
-    clone() {
-
-        const copy = new Network(
-            this.input_layer,
-            this.hidden_layer,
-            this.output_layer
-        );
-
-        // Copy weights
-        for (let i = 0; i < this.weights.length; i++) {
-
-            for (let j = 0; j < this.weights[i].length; j++) {
-
-                for (let k = 0; k < this.weights[i][j].length; k++) {
-
-                    copy.weights[i][j][k] =
-                        this.weights[i][j][k];
-                }
-            }
-        }
-
-        // Copy biases
-        for (let i = 0; i < this.neurons.length; i++) {
-
-            for (let j = 0; j < this.neurons[i].length; j++) {
-
-                copy.neurons[i][j].bias =
-                    this.neurons[i][j].bias;
-            }
-        }
-
-        return copy;
+    display() {
+        console.log(`Layers: ${this.layers}`);
+        console.log("Neurons:", this.neurons);
+        console.log("Weights:", this.weights);
     }
 }
