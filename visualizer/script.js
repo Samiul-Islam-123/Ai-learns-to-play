@@ -6,6 +6,26 @@ const ctx = canvas.getContext("2d");
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
+const chartCanvas = document.getElementById("chartCanvas");
+const chartCtx = chartCanvas.getContext("2d");
+
+
+// ============================================================
+// CHART STATE
+// ============================================================
+
+const chartData = {
+    generations: [],
+    fitness: [],
+    gaps: []
+};
+
+let currentStats = {
+    generation: 0,
+    bestFitness: 0,
+    gapsPassed: 0
+};
+
 
 // ============================================================
 // CURRENT NETWORK STATE
@@ -75,15 +95,6 @@ brainChannel.onmessage = (event) => {
 
     if (data.type === "prediction_complete") {
 
-        console.log(
-            "Prediction complete"
-        );
-
-        console.log(
-            "Final output:",
-            data.output
-        );
-
         activeLayer =
             network.layers.length - 1;
 
@@ -91,7 +102,171 @@ brainChannel.onmessage = (event) => {
 
         draw();
     }
+
+
+    if (data.type === "stats_update") {
+
+        currentStats = {
+            generation: data.generation,
+            bestFitness: data.bestFitness,
+            gapsPassed: data.gapsPassed
+        };
+
+        chartData.generations.push(data.generation);
+        chartData.fitness.push(data.bestFitness);
+        chartData.gaps.push(data.gapsPassed);
+
+        drawChart();
+    }
 };
+
+
+// ============================================================
+// DRAW CHART
+// ============================================================
+
+function drawChart() {
+
+    const W = chartCanvas.width;
+    const H = chartCanvas.height;
+    const pad = { top: 40, right: 20, bottom: 40, left: 55 };
+    const plotW = W - pad.left - pad.right;
+    const plotH = H - pad.top - pad.bottom;
+
+    chartCtx.clearRect(0, 0, W, H);
+
+
+    // Background
+    chartCtx.fillStyle = "rgba(10, 10, 10, 0.88)";
+    roundRect(chartCtx, 0, 0, W, H, 12);
+    chartCtx.fill();
+
+
+    // Stat cards
+    drawStatCard(chartCtx, 16,  8, `GEN`,          currentStats.generation);
+    drawStatCard(chartCtx, 150, 8, `BEST FITNESS`, currentStats.bestFitness.toFixed(1));
+    drawStatCard(chartCtx, 310, 8, `GAPS`,         currentStats.gapsPassed);
+
+
+    if (chartData.fitness.length < 2) return;
+
+
+    const maxFitness = Math.max(...chartData.fitness, 1);
+    const maxGaps    = Math.max(...chartData.gaps, 1);
+    const n          = chartData.fitness.length;
+
+
+    // Grid lines
+    chartCtx.strokeStyle = "rgba(255,255,255,0.07)";
+    chartCtx.lineWidth = 1;
+
+    for (let g = 0; g <= 4; g++) {
+        const y = pad.top + plotH - (g / 4) * plotH;
+        chartCtx.beginPath();
+        chartCtx.moveTo(pad.left, y);
+        chartCtx.lineTo(pad.left + plotW, y);
+        chartCtx.stroke();
+
+        chartCtx.fillStyle = "rgba(255,255,255,0.35)";
+        chartCtx.font = "10px monospace";
+        chartCtx.textAlign = "right";
+        chartCtx.fillText(
+            ((g / 4) * maxFitness).toFixed(0),
+            pad.left - 6,
+            y + 4
+        );
+    }
+
+
+    // Fitness line
+    drawLine(
+        chartCtx, chartData.fitness, maxFitness,
+        n, pad, plotW, plotH,
+        "rgba(99, 179, 237, 0.9)"
+    );
+
+
+    // Gaps line (scaled to same axis proportionally)
+    drawLine(
+        chartCtx, chartData.gaps, maxGaps,
+        n, pad, plotW, plotH,
+        "rgba(104, 211, 145, 0.9)"
+    );
+
+
+    // Axis
+    chartCtx.strokeStyle = "rgba(255,255,255,0.2)";
+    chartCtx.lineWidth = 1;
+    chartCtx.beginPath();
+    chartCtx.moveTo(pad.left, pad.top);
+    chartCtx.lineTo(pad.left, pad.top + plotH);
+    chartCtx.lineTo(pad.left + plotW, pad.top + plotH);
+    chartCtx.stroke();
+
+
+    // Legend
+    drawLegendDot(chartCtx, pad.left,      H - 12, "rgba(99, 179, 237, 0.9)",  "Fitness");
+    drawLegendDot(chartCtx, pad.left + 90, H - 12, "rgba(104, 211, 145, 0.9)", "Gaps");
+}
+
+
+function drawLine(ctx, data, maxVal, n, pad, plotW, plotH, color) {
+
+    ctx.beginPath();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+
+    for (let i = 0; i < n; i++) {
+        const x = pad.left + (i / (n - 1)) * plotW;
+        const y = pad.top + plotH - (data[i] / maxVal) * plotH;
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+
+    ctx.stroke();
+
+    // Dot on latest point
+    const lx = pad.left + plotW;
+    const ly = pad.top + plotH - (data[n - 1] / maxVal) * plotH;
+    ctx.beginPath();
+    ctx.arc(lx, ly, 3, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+}
+
+
+function drawStatCard(ctx, x, y, label, value) {
+    ctx.fillStyle = "rgba(255,255,255,0.45)";
+    ctx.font = "9px monospace";
+    ctx.textAlign = "left";
+    ctx.fillText(label, x, y + 10);
+
+    ctx.fillStyle = "white";
+    ctx.font = "bold 14px monospace";
+    ctx.fillText(value, x, y + 26);
+}
+
+
+function drawLegendDot(ctx, x, y, color, label) {
+    ctx.beginPath();
+    ctx.arc(x, y, 4, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.fillStyle = "rgba(255,255,255,0.5)";
+    ctx.font = "10px monospace";
+    ctx.textAlign = "left";
+    ctx.fillText(label, x + 8, y + 4);
+}
+
+
+function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y,     x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x,     y + h, r);
+    ctx.arcTo(x,     y + h, x,     y,     r);
+    ctx.arcTo(x,     y,     x + w, y,     r);
+    ctx.closePath();
+}
 
 
 // ============================================================

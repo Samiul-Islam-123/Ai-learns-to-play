@@ -64,6 +64,12 @@ class Bird {
         }
     }
 
+    clone(){
+        const clonedBrain = this.brain.clone();
+        const clonedBird = new Bird(this.radius, this.jumpForce, clonedBrain);
+        return clonedBird;
+    }
+
     jump() {
         this.velocity = this.jumpForce;
     }

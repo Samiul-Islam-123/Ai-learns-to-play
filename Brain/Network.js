@@ -15,6 +15,7 @@ class Network {
         ];
 
         this.weights = [];
+        this.visualize = false;
         this.init();
     }
 
@@ -71,8 +72,7 @@ class Network {
             this.neurons[0][i].value = inputs[i];
         }
 
-        // Tell visualizer that prediction started
-        brainChannel.postMessage({
+        if (this.visualize) brainChannel.postMessage({
             type: "prediction_start",
             neurons: this.getSerializableNeurons(),
             weights: this.weights
@@ -148,7 +148,7 @@ class Network {
             // Layer finished
 
 
-            brainChannel.postMessage({
+            if (this.visualize) brainChannel.postMessage({
                 type: "layer_complete",
                 layer: layer,
                 neurons: this.getSerializableNeurons()
@@ -165,7 +165,7 @@ class Network {
                 .map(neuron => neuron.value);
 
 
-        brainChannel.postMessage({
+        if (this.visualize) brainChannel.postMessage({
             type: "prediction_complete",
             output: output,
             neurons: this.getSerializableNeurons()
