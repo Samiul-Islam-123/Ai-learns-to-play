@@ -1,0 +1,9 @@
+let GAME_RUNNING = true;
+let TRAINING_METHOD = "GeneticEvolution";
+let POPULATION_SIZE = 2;
+let BIRD_JUMP_FORCE = -10;
+let BIRD_RADIUS = 20;
+
+let SURVIVAL_REWARD=0.1;
+let GAP_SURVIVAL_REWARD=0.5;
+let DEATH_PENALTY=-1;
