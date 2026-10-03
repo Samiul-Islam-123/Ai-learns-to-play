@@ -142,6 +142,29 @@ function play(bird) {
 }
 
 
+function updateStatsPanel() {
+
+    const aliveBirds = birds.filter(b => b.alive).length;
+
+    let bestGaps    = 0;
+    let bestFitness = 0;
+
+    for (let bird of birds) {
+        if (bird.gaps_passed > bestGaps)    bestGaps    = bird.gaps_passed;
+        if (bird.fitness     > bestFitness) bestFitness = bird.fitness;
+    }
+
+    if (best_bird && best_bird.gaps_passed > bestGaps)    bestGaps    = best_bird.gaps_passed;
+    if (best_bird && best_bird.fitness     > bestFitness) bestFitness = best_bird.fitness;
+
+    document.getElementById("stat-generation").textContent = generation;
+    document.getElementById("stat-population").textContent = birds.length;
+    document.getElementById("stat-alive").textContent      = aliveBirds;
+    document.getElementById("stat-gaps").textContent       = bestGaps;
+    document.getElementById("stat-fitness").textContent    = bestFitness.toFixed(1);
+}
+
+
 function mainLoop() {
 
     for (let i = 0; i < birds.length; i++) {
@@ -169,6 +192,8 @@ function mainLoop() {
             nextGeneration();
         }
     }
+
+    updateStatsPanel();
 }
 
 

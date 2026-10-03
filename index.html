@@ -18,12 +18,40 @@
     <main>
     </main>
 
+    <div id="stats-panel">
+      <div class="stat">
+        <span class="stat-label">GENERATION</span>
+        <span class="stat-value" id="stat-generation">1</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat">
+        <span class="stat-label">POPULATION</span>
+        <span class="stat-value" id="stat-population">-</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat">
+        <span class="stat-label">ALIVE</span>
+        <span class="stat-value" id="stat-alive">-</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat">
+        <span class="stat-label">BEST GAPS</span>
+        <span class="stat-value" id="stat-gaps">0</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat">
+        <span class="stat-label">BEST FITNESS</span>
+        <span class="stat-value" id="stat-fitness">0</span>
+      </div>
+    </div>
+
     <div id="sim-controls">
       <button id="btn-stop" onclick="stopSimulation()">⏸ Stop</button>
       <button id="btn-reset" onclick="resetSimulation()">↺ Reset</button>
       <button id="btn-download" onclick="downloadBestBrain()">⬇ Download Best Brain</button>
       <button id="btn-import" onclick="document.getElementById('brain-file-input').click()">⬆ Import Brain</button>
       <input type="file" id="brain-file-input" accept=".json" style="display:none" onchange="handleBrainImport(event)">
+      <button id="btn-visualizer" onclick="window.open('https://flappy-bird-simulation.vercel.app/visualizer/index.html', 'nnvisualizer', 'width=1280,height=800,menubar=no,toolbar=no,location=no,status=no')">🧠 Neural Network Visualizer</button>
     </div>
     <script src="GlobalConfigs.js"></script>
     <script src="sketch.js"></script>
